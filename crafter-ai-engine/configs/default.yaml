@@ -1,0 +1,60 @@
+# Default configuration for CNN + LSTM PPO training
+
+experiment:
+  name: "crafter_lstm_ppo"
+  description: "CNN + LSTM + PPO on Crafter with reward"
+  model_type: "RecurrentActorCritic"  # or "ActorCritic" for MLP baseline
+  seed: 42
+
+environment:
+  reward: true
+  max_episode_steps: 10000
+
+model:
+  in_channels: 3
+  cnn_out_features: 512
+  lstm_hidden_size: 256
+  lstm_layers: 1
+  num_actions: 17
+
+training:
+  total_timesteps: 1000000
+  num_envs: 4
+  rollout_steps: 128
+  ppo_epochs: 4
+  batch_size: null  # auto: rollout_steps * num_envs // 4
+  learning_rate: 0.0003
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_range: 0.2
+  entropy_coefficient: 0.01
+  value_coefficient: 0.5
+  max_grad_norm: 0.5
+  target_kl: null  # null = no early stopping on KL
+
+device:
+  prefer_mps: true  # Apple Silicon M4
+
+checkpointing:
+  checkpoint_dir: "checkpoints"
+  checkpoint_interval: 50000  # steps
+  max_checkpoints: 10
+
+recording:
+  enabled: true
+  storage_dir: "recordings"
+  frame_interval: 2  # Record every 2nd frame to save space
+  compression: true
+  max_storage_gb: 5.0
+
+logging:
+  log_dir: "logs"
+  tensorboard_dir: "tensorboard_logs"
+  log_interval: 1  # Log every update
+  eval_interval: 100000  # Evaluate every 100K steps
+  eval_episodes: 10
+
+evaluation:
+  num_episodes: 20
+  seed: 1000
+
