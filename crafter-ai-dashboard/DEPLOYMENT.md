@@ -47,3 +47,4 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 4
 | `NEXT_PUBLIC_WS_URL` | `ws://localhost:8000/ws/live-game` | Live observation WebSocket URL |
 | `CRAFTER_HOST` | `0.0.0.0` | Backend bind host |
 | `CRAFTER_PORT` | `8000` | Backend bind port |
+

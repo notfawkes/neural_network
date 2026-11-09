@@ -94,3 +94,4 @@ class MetricsService:
         except Exception as e:
             logger.error(f"Error reading metrics from {metrics_file}: {e}")
             return {"error": str(e)}
+

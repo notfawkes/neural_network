@@ -87,3 +87,4 @@ Side-by-side policy comparison on identical observations:
 ```bash
 python scripts/compare.py --checkpoint-a checkpoints/crafter_lstm_ppo_step00050000.pt --checkpoint-b checkpoints/crafter_lstm_ppo_step00250000.pt
 ```
+

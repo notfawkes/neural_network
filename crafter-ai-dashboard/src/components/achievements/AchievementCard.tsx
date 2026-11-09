@@ -66,3 +66,4 @@ export function AchievementCard({ achievement }: AchievementCardProps) {
     </div>
   );
 }
+

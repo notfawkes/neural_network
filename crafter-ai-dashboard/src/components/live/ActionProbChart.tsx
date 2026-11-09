@@ -65,3 +65,4 @@ export function ActionProbChart({ probs, selectedAction }: ActionProbChartProps)
     </div>
   );
 }
+

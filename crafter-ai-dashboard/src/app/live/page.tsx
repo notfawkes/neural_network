@@ -129,3 +129,4 @@ export default function LiveTrainingPage() {
     </div>
   );
 }
+

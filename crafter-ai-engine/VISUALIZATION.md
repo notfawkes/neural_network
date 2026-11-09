@@ -44,3 +44,4 @@ To verify that neural updates result in genuine policy improvements rather than 
 2. Identical observation frames are presented to both models.
 3. The observatory plots the comparative shifts in action distributions:
    - For example: when facing a zombie, Checkpoint A displays 12% attack probability, whereas Checkpoint B displays 68% attack probability.
+

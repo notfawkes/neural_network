@@ -149,3 +149,4 @@ class EpisodeService:
         except Exception as e:
             logger.error(f"Error loading frames for episode {episode_id}: {e}")
             return None
+

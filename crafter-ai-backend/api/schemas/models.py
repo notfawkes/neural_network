@@ -46,3 +46,4 @@ class CompareResponse(BaseModel):
     model_a_info: Dict[str, Any]
     model_b_info: Dict[str, Any]
     samples: List[SampleComparison]
+

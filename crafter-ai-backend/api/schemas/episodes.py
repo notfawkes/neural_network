@@ -32,3 +32,4 @@ class EpisodeFramesResponse(BaseModel):
     total_frames: int
     frame_interval: int
     frames: List[str] = Field(description="Base64 encoded JPEG frames")
+

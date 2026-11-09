@@ -65,3 +65,4 @@ def test_experiments_list():
     res = client.get("/api/experiments")
     assert res.status_code == 200
     assert isinstance(res.json(), list)
+

@@ -254,3 +254,4 @@ class ModelService:
             obs_list.append(obs)
 
         return np.stack(raw_list), torch.as_tensor(np.stack(obs_list), dtype=torch.float32)
+

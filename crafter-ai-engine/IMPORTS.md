@@ -55,3 +55,4 @@ crafter_ai.env.adapter (CrafterEnv, VecCrafterEnv)
 ### `crafter_ai.training.ppo_recurrent`
 - Imports: `torch`, `torch.nn`, `torch.optim`, `numpy`, `crafter_ai.models.actor_critic.RecurrentActorCritic`, `crafter_ai.env.adapter.VecCrafterEnv`, `crafter_ai.training.rollout_buffer.RolloutBuffer`, `crafter_ai.utils.checkpoint.CheckpointManager`
 - Exports: `RecurrentPPOTrainer`
+

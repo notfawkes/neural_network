@@ -47,3 +47,4 @@ class MetricsResponse(BaseModel):
     recent_rewards: List[float] = Field(default_factory=list)
     recent_lengths: List[int] = Field(default_factory=list)
     recent_losses: List[Dict[str, float]] = Field(default_factory=list)
+

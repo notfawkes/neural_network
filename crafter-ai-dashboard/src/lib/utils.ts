@@ -34,3 +34,4 @@ export const CRAFTER_ACTIONS = [
   "make_wood_pickaxe", "make_stone_pickaxe", "make_iron_pickaxe",
   "make_wood_sword", "make_stone_sword", "make_iron_sword",
 ];
+

@@ -18,3 +18,4 @@ This document maps all frontend data hooks and calls to backend REST endpoints.
 | `GET` | `/api/achievements` | `api.getAchievements()` | Calculates 22-achievement success rates |
 | `GET` | `/api/experiments` | `api.getExperiments()` | Lists experiment YAML configurations |
 | `WS` | `/ws/live-game` | `WebSocket` in `/live` | High-frequency frame and action distribution stream |
+

@@ -175,3 +175,4 @@ export function EpisodeReplay({ episode, frames, onClose }: EpisodeReplayProps) 
     </div>
   );
 }
+

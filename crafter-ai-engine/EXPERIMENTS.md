@@ -36,3 +36,4 @@ Crafter evaluates agents across a standardized budget of 1,000,000 environment s
 - **Achievements Unlocked**: `place_table`, `make_wood_pickaxe`, `collect_stone`, `make_stone_pickaxe`, `defeat_zombie`.
 - **Mean Reward**: +3.5 to +8.2.
 - **Average Length**: 350 - 700+ steps.
+

@@ -73,3 +73,4 @@ $$g \leftarrow g \cdot \min\left(1, \, \frac{0.5}{\|g\|_2 + 10^{-6}}\right)$$
 - **Approximate KL Divergence**:
   $$D_{\text{KL}}^{\text{approx}} = \mathbb{E}_t \left[ (r_t - 1) - \log r_t \right]$$
 - **Clip Fraction**: Percentage of transitions where $|r_t - 1| > \epsilon$.
+

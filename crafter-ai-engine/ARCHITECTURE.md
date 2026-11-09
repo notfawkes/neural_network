@@ -71,3 +71,4 @@ Unlike standard feedforward PPO implementations which shuffle transitions across
 - Transitions are grouped by environment sequence: $[T, B, \dots]$.
 - Mini-batches preserve the temporal order $0, 1, \dots, T-1$.
 - Initial recurrent states $(h_0, c_0)$ are captured at the beginning of rollout collection and passed to the optimizer during update epochs.
+

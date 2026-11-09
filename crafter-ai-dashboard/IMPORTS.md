@@ -15,3 +15,4 @@ This document describes component and library import relationships across `craft
 - `src/components/analysis/`: Telemetry graph wrappers (`MetricsChart`).
 - `src/components/network/`: Layer topology visualization (`ArchDiagram`).
 - `src/components/achievements/`: Milestone tracking cards (`AchievementCard`).
+

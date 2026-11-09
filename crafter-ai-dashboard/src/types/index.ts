@@ -130,3 +130,4 @@ export interface LiveFrameData {
   is_alive: boolean;
   lstm_h_norm: number;
 }
+

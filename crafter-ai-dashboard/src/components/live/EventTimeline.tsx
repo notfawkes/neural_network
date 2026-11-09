@@ -50,3 +50,4 @@ export function EventTimeline({ events }: EventTimelineProps) {
     </div>
   );
 }
+

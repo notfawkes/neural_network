@@ -48,3 +48,4 @@ export const api = {
   getAchievements: () => fetchJson<any>("/api/achievements"),
   getExperiments: () => fetchJson<any[]>("/api/experiments"),
 };
+

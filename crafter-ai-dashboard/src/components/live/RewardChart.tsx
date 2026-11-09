@@ -55,3 +55,4 @@ export function RewardChart({ data }: RewardChartProps) {
     </div>
   );
 }
+
