@@ -89,6 +89,7 @@ def main():
     tc = config["training"]
     rc = config.get("recording", {})
     lc = config.get("logging", {})
+    cc = config.get("checkpointing", {})
 
     # Merge total_timesteps override
     if args.total_timesteps:
@@ -128,15 +129,30 @@ def main():
     flat_tc.update(config.get("model", {}))
     flat_tc["experiment_name"] = exp["name"]
 
+    # Resolve directories relative to workspace root
+    workspace_root = Path(__file__).resolve().parent.parent.parent
+    checkpoint_dir = Path(cc.get("checkpoint_dir", "checkpoints"))
+    if not checkpoint_dir.is_absolute():
+        checkpoint_dir = workspace_root / checkpoint_dir
+
+    storage_dir = Path(rc.get("storage_dir", "recordings"))
+    if not storage_dir.is_absolute():
+        storage_dir = workspace_root / storage_dir
+
+    log_dir = Path(lc.get("log_dir", "logs"))
+    if not log_dir.is_absolute():
+        log_dir = workspace_root / log_dir
+
+    exp_dir = workspace_root / "experiments"
+
     # Build trainer
-    cc = config.get("checkpointing", {})
     if model_type == "RecurrentActorCritic":
         trainer = RecurrentPPOTrainer(
             model=model,
             env=env,
             config=flat_tc,
             device=device,
-            checkpoint_dir=cc.get("checkpoint_dir", "checkpoints"),
+            checkpoint_dir=str(checkpoint_dir),
             experiment_name=exp["name"],
         )
     else:
@@ -145,7 +161,7 @@ def main():
             env=env,
             config=flat_tc,
             device=device,
-            checkpoint_dir=cc.get("checkpoint_dir", "checkpoints"),
+            checkpoint_dir=str(checkpoint_dir),
             experiment_name=exp["name"],
         )
 
@@ -156,7 +172,7 @@ def main():
 
     # Set up recording
     recorder = EpisodeRecorder(
-        storage_dir=rc.get("storage_dir", "recordings"),
+        storage_dir=str(storage_dir),
         enabled=rc.get("enabled", True),
         frame_interval=rc.get("frame_interval", 2),
         compression=rc.get("compression", True),
@@ -166,27 +182,92 @@ def main():
 
     # Metrics tracker
     metrics = MetricsTracker(
-        log_dir=lc.get("log_dir", "logs"),
+        log_dir=str(log_dir),
         experiment_name=exp["name"],
     )
 
     # Shared state storage for backend
     storage = RecordingStorage(
-        base_dir="experiments",
+        base_dir=str(exp_dir),
         experiment_name=exp["name"],
     )
 
     # Recording state
-    _active_recording = {}  # env_idx → recording active
+    _recording_in_progress = [False]
 
     def metrics_callback(event: dict):
         event_type = event.get("type")
 
-        if event_type == "episode_done":
+        if event_type == "step":
+            if not _recording_in_progress[0]:
+                recorder.begin_episode(
+                    episode_id=trainer.episode_count + 1,
+                    global_step=event.get("step", 0),
+                    experiment_name=exp["name"],
+                    model_type=model_type,
+                )
+                _recording_in_progress[0] = True
+
+            info = event.get("info", {})
+            action_idx = event.get("action", 0)
+            from crafter_ai.env.adapter import ACTION_NAMES
+            action_str = ACTION_NAMES[action_idx] if action_idx < len(ACTION_NAMES) else "noop"
+
+            recorder.record_step(
+                obs=event.get("raw_obs"),
+                action=action_idx,
+                reward=event.get("reward", 0.0),
+                player_pos=info.get("player_pos"),
+                action_probs=event.get("action_probs"),
+                critic_value=event.get("critic_value"),
+                lstm_h_norm=event.get("lstm_h_norm"),
+            )
+
+            if event.get("raw_obs") is not None:
+                storage.update_live_obs(event["raw_obs"])
+
+            storage.update_training_state({
+                "status": "training",
+                "global_step": trainer.global_step,
+                "episode_count": trainer.episode_count,
+                "last_action": action_str,
+                "action_probs": event.get("action_probs", []).tolist() if hasattr(event.get("action_probs"), "tolist") else event.get("action_probs"),
+                "last_reward": event.get("reward", 0.0),
+                "critic_value": event.get("critic_value", 0.0),
+                "lstm_h_norm": event.get("lstm_h_norm", 1.0),
+                "lstm_c_norm": event.get("lstm_c_norm", 1.0),
+                "lstm_sample_vec": event.get("lstm_sample_vec", []),
+                "cnn_norm": event.get("cnn_norm", 1.0),
+                "cnn_sample_vec": event.get("cnn_sample_vec", []),
+                "phase": event.get("phase", "COLLECTING_ROLLOUT"),
+                "phase_step": event.get("phase_step", ""),
+                "phase_details": event.get("phase_details", ""),
+                "player_pos": info.get("player_pos").tolist() if hasattr(info.get("player_pos"), "tolist") else info.get("player_pos"),
+                "health": info.get("inventory", {}).get("health", 9) if isinstance(info.get("inventory"), dict) else 9,
+            })
+
+        elif event_type == "phase_change":
+            storage.update_training_state({
+                "phase": event.get("phase"),
+                "phase_step": event.get("phase_step", ""),
+                "phase_epoch": event.get("phase_epoch", ""),
+                "phase_details": event.get("phase_details", ""),
+            })
+
+        elif event_type == "episode_done":
+            env_id = event.get("env_id", 0)
             ep_id = event.get("episode_id", 0)
             reward = event.get("reward", 0.0)
             length = event.get("length", 0)
             achievements = event.get("achievements", {})
+
+            if env_id == 0 and _recording_in_progress[0]:
+                recorder.end_episode(
+                    achievements=achievements,
+                    terminated=True,
+                    truncated=False,
+                )
+                _recording_in_progress[0] = False
 
             metrics.record_episode(
                 reward=reward,
@@ -207,12 +288,15 @@ def main():
                 "fps": event.get("fps", 0.0),
                 "last_episode_reward": reward,
                 "last_episode_length": length,
+                "achievements": achievements,
             })
 
         elif event_type == "update":
             metrics.record_update(event)
             storage.update_training_state({
                 "status": "training",
+                "phase": "POLICY_UPDATED",
+                "phase_details": f"Policy updated with backpropagated gradients (Update #{trainer.update_count})",
                 "global_step": trainer.global_step,
                 "update_count": trainer.update_count,
                 "policy_loss": event.get("policy_loss", 0.0),
@@ -222,9 +306,12 @@ def main():
                 "fps": event.get("fps", 0.0),
             })
 
-            # Save TensorBoard metrics
-            if event.get("update_count", 0) % 10 == 0:
+            # Save metrics to JSON
+            if event.get("update_count", 0) % 5 == 0:
                 metrics.save()
+
+    # Save initial checkpoint so checkpoints are immediately available
+    trainer.save_checkpoint(tag="init")
 
     # Update storage status
     storage.update_training_state({"status": "starting", "experiment_name": exp["name"]})

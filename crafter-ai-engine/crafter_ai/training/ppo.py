@@ -163,6 +163,20 @@ class PPOTrainer:
             self._last_dones = dones
             self.global_step += self.num_envs
 
+            # Stream step telemetry and observation
+            if metrics_callback:
+                raw_obs = self.env.get_raw_obs() if hasattr(self.env, "get_raw_obs") else None
+                metrics_callback({
+                    "type": "step",
+                    "step": self.global_step,
+                    "action": int(actions_np[0]),
+                    "action_probs": probs[0].cpu().numpy(),
+                    "critic_value": float(values_np[0]),
+                    "reward": float(rewards[0]),
+                    "raw_obs": raw_obs[0] if raw_obs is not None else None,
+                    "info": infos[0],
+                })
+
             # Track completed episodes
             for i, info in enumerate(infos):
                 if info.get("episode_done", False):

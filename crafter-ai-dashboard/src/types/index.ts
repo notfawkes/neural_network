@@ -128,6 +128,17 @@ export interface LiveFrameData {
   action_probs: number[];
   critic_value: number;
   is_alive: boolean;
+  status?: string;
   lstm_h_norm: number;
+  lstm_c_norm?: number;
+  lstm_sample_vec?: number[];
+  cnn_norm?: number;
+  cnn_sample_vec?: number[];
+  phase?: string;
+  phase_step?: string;
+  phase_epoch?: string;
+  phase_details?: string;
+  player_pos?: [number, number];
+  health?: number;
 }
 

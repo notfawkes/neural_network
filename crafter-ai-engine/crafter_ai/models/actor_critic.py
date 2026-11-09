@@ -341,3 +341,7 @@ class RecurrentActorCritic(nn.Module):
             "h_std": float(h.std().item()),
             "c_std": float(c.std().item()),
         }
+
+    def get_features(self, obs: torch.Tensor) -> torch.Tensor:
+        """Get CNN feature embeddings (512-d)."""
+        return self.cnn(obs)

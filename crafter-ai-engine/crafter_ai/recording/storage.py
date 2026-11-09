@@ -12,6 +12,16 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 
+def _json_default(obj):
+    if hasattr(obj, "tolist"):
+        return obj.tolist()
+    if hasattr(obj, "item"):
+        return obj.item()
+    if isinstance(obj, (set, tuple)):
+        return list(obj)
+    return str(obj)
+
+
 class RecordingStorage:
     """
     Shared storage interface for live training state.
@@ -66,10 +76,13 @@ class RecordingStorage:
             self._flush_state()
 
     def _flush_state(self):
-        """Write state to disk."""
+        """Write state to disk atomically."""
+        import os
         try:
-            with open(self._state_path, "w") as f:
-                json.dump(self._state, f)
+            tmp_path = self._state_path.with_suffix(".tmp.json")
+            with open(tmp_path, "w") as f:
+                json.dump(self._state, f, default=_json_default)
+            os.replace(str(tmp_path), str(self._state_path))
         except Exception:
             pass  # Never block training
 
@@ -79,10 +92,13 @@ class RecordingStorage:
             return dict(self._state)
 
     def update_live_obs(self, obs: "np.ndarray"):
-        """Write latest observation for live streaming."""
+        """Write latest observation for live streaming atomically."""
         import numpy as np
+        import os
         try:
-            np.save(str(self._live_obs_path), obs)
+            tmp_path = self._live_obs_path.with_suffix(".tmp.npy")
+            np.save(str(tmp_path), obs)
+            os.replace(str(tmp_path), str(self._live_obs_path))
         except Exception:
             pass
 

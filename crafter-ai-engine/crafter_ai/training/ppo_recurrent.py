@@ -178,6 +178,39 @@ class RecurrentPPOTrainer:
             self._last_dones = dones
             self.global_step += self.num_envs
 
+            # Stream step telemetry and observation
+            if metrics_callback:
+                raw_obs = self.env.get_raw_obs() if hasattr(self.env, "get_raw_obs") else None
+                with torch.no_grad():
+                    cnn_feat = self.model.get_features(obs_tensor[0:1])
+                    cnn_norm = float(cnn_feat.norm().item())
+                    cnn_sample_vec = cnn_feat[0, :16].cpu().numpy().tolist()
+
+                lstm_h_norm = float(self._lstm_state[0].norm().item()) if self._lstm_state is not None else 1.0
+                lstm_c_norm = float(self._lstm_state[1].norm().item()) if self._lstm_state is not None else 1.0
+                lstm_sample_vec = self._lstm_state[0][0, 0, :16].cpu().numpy().tolist() if self._lstm_state is not None else [0.0] * 16
+
+                metrics_callback({
+                    "type": "step",
+                    "step": self.global_step,
+                    "rollout_step": step + 1,
+                    "rollout_total": self.rollout_steps,
+                    "action": int(actions_np[0]),
+                    "action_probs": probs[0].cpu().numpy(),
+                    "critic_value": float(values_np[0]),
+                    "reward": float(rewards[0]),
+                    "raw_obs": raw_obs[0] if raw_obs is not None else None,
+                    "info": infos[0],
+                    "lstm_h_norm": lstm_h_norm,
+                    "lstm_c_norm": lstm_c_norm,
+                    "lstm_sample_vec": lstm_sample_vec,
+                    "cnn_norm": cnn_norm,
+                    "cnn_sample_vec": cnn_sample_vec,
+                    "phase": "COLLECTING_ROLLOUT",
+                    "phase_step": f"{step + 1}/{self.rollout_steps}",
+                    "phase_details": f"Collecting transition {(step + 1) * self.num_envs}/{self.rollout_steps * self.num_envs} into rollout buffer",
+                })
+
             # Track completed episodes
             for i, info in enumerate(infos):
                 if info.get("episode_done", False):
@@ -190,6 +223,7 @@ class RecurrentPPOTrainer:
                     if metrics_callback:
                         metrics_callback({
                             "type": "episode_done",
+                            "env_id": i,
                             "episode_id": info.get("episode_id", 0),
                             "reward": ep_reward,
                             "length": ep_length,
@@ -199,6 +233,14 @@ class RecurrentPPOTrainer:
                         })
 
         # Bootstrap value for GAE
+        if metrics_callback:
+            metrics_callback({
+                "type": "phase_change",
+                "phase": "CALCULATING_ADVANTAGES",
+                "phase_step": "GAE-λ",
+                "phase_details": f"Computing Generalized Advantage Estimation (GAE-λ) with γ={self.gamma}, λ={self.gae_lambda}",
+            })
+
         with torch.no_grad():
             last_obs_t = torch.as_tensor(self._last_obs, dtype=torch.float32).to(self.device)
             last_done_t = torch.as_tensor(self._last_dones, dtype=torch.float32).to(self.device)
@@ -225,7 +267,7 @@ class RecurrentPPOTrainer:
 
         return stats
 
-    def update(self) -> Dict[str, float]:
+    def update(self, metrics_callback=None) -> Dict[str, float]:
         """
         Perform PPO update with recurrent sequences.
 
@@ -237,6 +279,14 @@ class RecurrentPPOTrainer:
         all_metrics = []
 
         for epoch in range(self.ppo_epochs):
+            if metrics_callback:
+                metrics_callback({
+                    "type": "phase_change",
+                    "phase": "PPO_UPDATE",
+                    "phase_epoch": f"{epoch + 1}/{self.ppo_epochs}",
+                    "phase_details": f"Updating Actor & Critic networks (Epoch {epoch + 1}/{self.ppo_epochs}, clip={self.clip_range})",
+                })
+
             # For recurrent PPO, we process the ENTIRE rollout as a sequence
             # We replay from the saved initial LSTM state
             epoch_metrics = self._recurrent_update_step()
@@ -377,7 +427,7 @@ class RecurrentPPOTrainer:
 
         while self.global_step < total_timesteps:
             rollout_stats = self.collect_rollout(metrics_callback=metrics_callback)
-            update_metrics = self.update()
+            update_metrics = self.update(metrics_callback=metrics_callback)
             update_metrics.update(rollout_stats)
 
             elapsed = time.time() - self._start_time

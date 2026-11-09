@@ -267,7 +267,7 @@ class EpisodeRecorder:
             arrays = {
                 "actions": np.array(episode.actions, dtype=np.int16),
                 "rewards": np.array(episode.rewards, dtype=np.float32),
-                "player_positions": np.array(episode.player_positions, dtype=np.int16),
+                "player_positions": np.array(episode.player_positions, dtype=np.int16) if episode.player_positions else np.zeros((0, 2), dtype=np.int16),
             }
 
             if episode.obs_frames:
@@ -280,6 +280,10 @@ class EpisodeRecorder:
             if any(v is not None for v in episode.critic_values):
                 vals = [v if v is not None else 0.0 for v in episode.critic_values]
                 arrays["critic_values"] = np.array(vals, dtype=np.float32)
+
+            if any(h is not None for h in episode.lstm_h_norms):
+                norms = [h if h is not None else 0.0 for h in episode.lstm_h_norms]
+                arrays["lstm_h_norms"] = np.array(norms, dtype=np.float32)
 
             # Save
             if self.compression:
