@@ -1,18 +1,30 @@
+# Python caches
 __pycache__/
 *.py[cod]
+*.pyc
 *.egg-info
 /dist
-/*.png
-/*.mp4
+.pytest_cache/
+
+# Environment & dependencies
 .DS_Store
 .venv/
 node_modules/
 .next/
-.pytest_cache/
-*.pyc
+
+# Heavy model weights and replay buffers
 *.pt
 *.npz
-experiments/
-recordings/
-logs/
-checkpoints/
+
+# Root data and runtime directories
+/experiments/
+/recordings/
+/logs/
+/checkpoints/
+
+# Engine local runtime artifacts
+/crafter-ai-engine/experiments/
+/crafter-ai-engine/recordings/
+/crafter-ai-engine/logs/
+/crafter-ai-engine/checkpoints/
+/crafter-ai-engine/tensorboard_logs/
