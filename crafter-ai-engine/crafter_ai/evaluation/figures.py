@@ -714,3 +714,4 @@ class FigureGenerator:
             logger.error(f"Error during figure generation: {e}", exc_info=True)
 
         return generated
+

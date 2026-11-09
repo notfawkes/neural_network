@@ -68,3 +68,4 @@ async def generate_figures():
         return {"status": "success", "generated_count": len(saved), "figures": [p.name for p in saved]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate figures: {e}")
+

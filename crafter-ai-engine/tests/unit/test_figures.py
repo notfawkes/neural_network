@@ -50,3 +50,4 @@ def test_figure_generator_generate_all(temp_figure_dir):
     for f in figs:
         assert f.exists()
         assert f.stat().st_size > 1000
+
