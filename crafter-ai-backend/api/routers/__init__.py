@@ -5,6 +5,7 @@ from .models import router as models_router
 from .achievements import router as achievements_router
 from .experiments import router as experiments_router
 from .websocket import router as websocket_router
+from .figures import router as figures_router
 
 __all__ = [
     "training_router",
@@ -13,5 +14,6 @@ __all__ = [
     "achievements_router",
     "experiments_router",
     "websocket_router",
+    "figures_router",
 ]
 

@@ -66,3 +66,20 @@ def test_experiments_list():
     assert res.status_code == 200
     assert isinstance(res.json(), list)
 
+
+def test_figures_list():
+    res = client.get("/api/figures")
+    assert res.status_code == 200
+    assert isinstance(res.json(), list)
+
+
+def test_figure_download():
+    # If figures exist, test downloading the first one
+    res = client.get("/api/figures")
+    data = res.json()
+    if data:
+        fig_name = data[0]["filename"]
+        download_res = client.get(f"/api/figures/download/{fig_name}")
+        assert download_res.status_code == 200
+        assert download_res.headers["content-type"] == "image/png"
+

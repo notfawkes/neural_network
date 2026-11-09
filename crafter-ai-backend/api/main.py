@@ -14,6 +14,7 @@ from .routers import (
     achievements_router,
     experiments_router,
     websocket_router,
+    figures_router,
 )
 from core.config import settings
 
@@ -39,6 +40,7 @@ app.include_router(models_router)
 app.include_router(achievements_router)
 app.include_router(experiments_router)
 app.include_router(websocket_router)
+app.include_router(figures_router)
 
 
 @app.get("/health")

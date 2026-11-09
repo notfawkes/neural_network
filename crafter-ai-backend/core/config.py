@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     experiments_dir: Path = workspace_dir / "experiments"
     state_dir: Path = workspace_dir / "experiments" / "state"
     logs_dir: Path = workspace_dir / "logs"
+    figures_dir: Path = workspace_dir / "figures"
 
     # Training process
     python_bin: str = "python3"
@@ -40,3 +41,4 @@ settings.recordings_dir.mkdir(parents=True, exist_ok=True)
 settings.checkpoints_dir.mkdir(parents=True, exist_ok=True)
 settings.state_dir.mkdir(parents=True, exist_ok=True)
 settings.logs_dir.mkdir(parents=True, exist_ok=True)
+settings.figures_dir.mkdir(parents=True, exist_ok=True)
