@@ -330,6 +330,19 @@ def main():
         storage.update_training_state({"status": "stopped"})
         metrics.save()
         recorder.stop()
+        try:
+            from crafter_ai.evaluation.figures import FigureGenerator
+            figures_dir = workspace_root / "figures"
+            fig_gen = FigureGenerator(
+                output_dir=str(figures_dir),
+                log_dir=str(log_dir),
+                recordings_dir=str(storage_dir),
+                checkpoints_dir=str(checkpoint_dir),
+            )
+            saved = fig_gen.generate_all_figures(experiment_name=exp["name"])
+            logger.info(f"Stored {len(saved)} training and evaluation figures in {figures_dir}")
+        except Exception as e:
+            logger.warning(f"Failed to generate post-training figures: {e}")
 
     logger.info("Training finished.")
 
