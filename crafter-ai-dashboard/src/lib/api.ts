@@ -47,5 +47,9 @@ export const api = {
   // Achievements & Experiments
   getAchievements: () => fetchJson<any>("/api/achievements"),
   getExperiments: () => fetchJson<any[]>("/api/experiments"),
+
+  // Publication Figures
+  getFigures: () => fetchJson<any[]>("/api/figures"),
+  generateFigures: () => fetchJson<any>("/api/figures/generate", { method: "POST" }),
 };
 
